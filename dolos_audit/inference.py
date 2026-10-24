@@ -42,8 +42,8 @@ def validate_config(config: dict) -> None:
     if config["split"] not in {"discovery", "smoke", "confirmation"}:
         raise ValueError("Invalid split")
     if config["split"] == "confirmation":
-        # Fail closed until a frozen protocol has been implemented and checked.
-        raise ValueError("Confirmation requires a verified protocol lock; not implemented yet")
+        if not config.get("confirmation_lock"):
+            raise ValueError("Confirmation requires a verified protocol lock")
 
 
 def run(config_path: Path, prompts_path: Path, destination: Path, *, resume=False) -> dict:
@@ -54,10 +54,16 @@ def run(config_path: Path, prompts_path: Path, destination: Path, *, resume=Fals
         raise ValueError("No prompts")
     if any(p["split"] != config["split"] for p in prompts):
         raise ValueError("Prompt split does not match configuration")
+    protocol_lock = None
+    if config["split"] == "confirmation":
+        from .protocol import verify
+
+        protocol_lock = verify(ROOT / config["confirmation_lock"], prompts_path, config_path)
     models = read_json(ROOT / "configs/models.json")
     source = {
         str(p.relative_to(ROOT)): file_sha256(p)
         for p in sorted((ROOT / "dolos_audit").glob("*.py"))
+        if p.name not in {"budget.py", "modal_run.py"}
     }
     signature = digest({"config": config, "prompts": prompts, "models": models, "source": source})
     destination = Path(destination)
@@ -83,6 +89,8 @@ def run(config_path: Path, prompts_path: Path, destination: Path, *, resume=Fals
             "failures": [],
             "model_outputs_are_real": True,
         }
+        if protocol_lock:
+            meta["protocol_payload_sha256"] = protocol_lock["payload_sha256"]
         write_json(destination / "run.json", meta)
         write_jsonl(destination / "prompts.jsonl", prompts)
         write_json(destination / "config.json", config)

@@ -1,0 +1,7 @@
+*.jsonl linguist-generated=true
+**/uv.lock linguist-generated=true
+requirements-runtime.lock linguist-generated=true
+results/**/source/** linguist-generated=true
+results/**/batches/** linguist-generated=true
+*.pdf binary
+*.docx binary

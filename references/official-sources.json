@@ -1,0 +1,33 @@
+{
+  "retrieved_date_utc": "2026-10-24",
+  "sprint_rules": {
+    "url": "https://apartresearch.com/sprints/ai-collusion-research-sprint-2026-10-23-to-2026-10-25",
+    "deadline_utc": "2026-10-26T11:59:00Z",
+    "main_text_page_limit": 8,
+    "abstract_words": [
+      150,
+      250
+    ],
+    "required_appendix": "Limitations and Dual-Use / Ethical Considerations",
+    "ai_assistance_permitted": true
+  },
+  "official_template": {
+    "id": "1Y5wd3VRbXU5N08BvAGiJUQTaWbMCSPjhzXsR-ozuehg",
+    "url": "https://docs.google.com/document/d/1Y5wd3VRbXU5N08BvAGiJUQTaWbMCSPjhzXsR-ozuehg/edit",
+    "title": "Apart Research hackathon submission template",
+    "modified_time": "2026-10-22T13:37:56.230Z",
+    "local_text": "references/official-template.txt",
+    "docx_export_succeeded": true,
+    "docx_materialized_locally": false
+  },
+  "upstream": {
+    "repository": "poseidon-research/collusion_hackathon",
+    "commit": "d585a7b3be50366cc2bdf5789bf8add5890b2abd",
+    "generate_blob": "bb65c7a9a9906df24d6c96437f30202278f100a2",
+    "readme_blob": "439b673b1116501d5a7533af91407b88d59a6f19",
+    "pyproject_blob": "e7553eeb88c0a92abe869d25d07d2fafee0fd6e8",
+    "uv_lock_blob": "7eb49216b3ae1e0a7d48a5818c8d598e4c4a638a",
+    "license_found_at_repository_root": false,
+    "inspection_copies_are_untracked": true
+  }
+}

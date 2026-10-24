@@ -1,0 +1,1 @@
+{"batch_size": 12, "confirmation_lock": null, "device": "cuda", "dtype": "bfloat16", "intervention": {"kind": "identity"}, "max_input_tokens": 1024, "max_new_tokens": 96, "models": ["dolos", "qwen"], "schema": 1, "seeds": [42], "split": "discovery", "temperature": 0.0, "timeout_s": 900, "top_k": 50, "top_p": 0.9}
