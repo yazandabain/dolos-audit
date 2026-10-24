@@ -15,8 +15,14 @@ import shutil
 import signal
 import time
 import traceback
+from contextlib import nullcontext
 from pathlib import Path
 
+from .interventions import (
+    interventions_for_model,
+    prepare_attention_interventions,
+    validate_interventions,
+)
 from .io import digest, file_sha256, read_json, read_jsonl, utcnow, write_json, write_jsonl
 from .scoring import score_output
 
@@ -37,13 +43,17 @@ def validate_config(config: dict) -> None:
         raise ValueError("At least one nonnegative integer seed is required")
     if len(set(config["seeds"])) != len(config["seeds"]):
         raise ValueError("Duplicate seed")
-    if config.get("intervention", {"kind": "identity"}) != {"kind": "identity"}:
-        raise ValueError("Only identity/no-change inference is implemented in this runner")
+    validate_interventions(config)
     if config["split"] not in {"discovery", "smoke", "confirmation"}:
         raise ValueError("Invalid split")
     if config["split"] == "confirmation":
         if not config.get("confirmation_lock"):
             raise ValueError("Confirmation requires a verified protocol lock")
+
+
+def checkpoint_name(config, model_name, spec, seed, index):
+    suffix = f"-{spec['id']}" if "interventions" in config else ""
+    return f"{model_name}{suffix}-{seed}-{index:05d}.json"
 
 
 def run(config_path: Path, prompts_path: Path, destination: Path, *, resume=False) -> dict:
@@ -158,8 +168,12 @@ def _execute(config, prompts, pins, destination, meta):
         for model_name in config["models"]:
             batch_size = config["batch_size"]
             batches = [prompts[i : i + batch_size] for i in range(0, len(prompts), batch_size)]
+            specs = interventions_for_model(config, model_name)
             if all(
-                (destination / "batches" / f"{model_name}-{seed}-{i:05d}.json").exists()
+                (
+                    destination / "batches" / checkpoint_name(config, model_name, spec, seed, i)
+                ).exists()
+                for spec in specs
                 for seed in config["seeds"]
                 for i in range(len(batches))
             ):
@@ -199,88 +213,120 @@ def _execute(config, prompts, pins, destination, meta):
                 "parameters": model.num_parameters(),
             }
             write_json(destination / "run.json", meta)
-            for seed in config["seeds"]:
-                for i, batch in enumerate(batches):
-                    checkpoint = destination / "batches" / f"{model_name}-{seed}-{i:05d}.json"
-                    if checkpoint.exists():
-                        saved = read_json(checkpoint)
-                        if saved["prompt_ids"] != [p["id"] for p in batch]:
-                            raise ValueError("Checkpoint prompt mismatch")
-                        continue
-                    set_seed(seed + i)
-                    rendered = [
-                        tokenizer.apply_chat_template(
-                            p["messages"], tokenize=False, add_generation_prompt=True
-                        )
-                        for p in batch
-                    ]
-                    inputs = tokenizer(
-                        rendered, padding=True, return_tensors="pt", add_special_tokens=False
+            manager = prepare_attention_interventions(model, specs, pins)
+            meta["reference_weights_used_for_interventions"] = bool(
+                meta.get("reference_weights_used_for_interventions") or manager is not None
+            )
+            for spec in specs:
+                context = (
+                    manager.apply(spec)
+                    if spec["kind"] != "identity"
+                    else nullcontext(
+                        {"spec": spec, "reference_assisted": False, "elements": 0, "tensors": []}
                     )
-                    if inputs["input_ids"].shape[1] > config["max_input_tokens"]:
-                        raise ValueError("Input exceeds configured maximum; no silent truncation")
-                    inputs = inputs.to(device)
-                    kwargs = {
-                        "max_new_tokens": config["max_new_tokens"],
-                        "do_sample": config["temperature"] > 0,
-                        "eos_token_id": eos,
-                        "pad_token_id": tokenizer.pad_token_id,
-                    }
-                    if config["temperature"] > 0:
-                        kwargs.update(
-                            temperature=config["temperature"],
-                            top_p=config["top_p"],
-                            top_k=config["top_k"],
-                        )
-                    tick = time.monotonic()
-                    with torch.inference_mode():
-                        output = model.generate(**inputs, **kwargs)
-                    generated = output[:, inputs["input_ids"].shape[1] :].tolist()
-                    records = []
-                    for prompt, ids in zip(batch, generated, strict=True):
-                        end = next((j + 1 for j, token in enumerate(ids) if token in eos), len(ids))
-                        ids = ids[:end]
-                        text = tokenizer.decode(ids, skip_special_tokens=True)
-                        records.append(
-                            {
-                                "id": f"{model_name}:{seed}:{prompt['id']}",
-                                "prompt_id": prompt["id"],
-                                "context_id": prompt["context_id"],
-                                "family": prompt["family"],
-                                "condition": prompt["condition"],
-                                "model": model_name,
-                                "seed": seed,
-                                "batch_seed": seed + i,
-                                "output": text,
-                                "output_token_ids": ids,
-                                "output_tokens": len(ids),
-                                "score": score_output(text, prompt["expected"]),
-                                "stopped_at_eos": bool(ids and ids[-1] in eos),
-                                "max_tokens_reached": len(ids) == config["max_new_tokens"],
-                            }
-                        )
-                    result = {
-                        "prompt_ids": [p["id"] for p in batch],
-                        "records": records,
-                        "elapsed_s": time.monotonic() - tick,
-                        "saved_at": utcnow(),
-                    }
-                    write_json(checkpoint, result, overwrite=False)
-                    meta["completed_batches"] = len(list((destination / "batches").glob("*.json")))
+                )
+                with context as receipt:
+                    meta.setdefault("intervention_receipts", {})[f"{model_name}:{spec['id']}"] = (
+                        receipt
+                    )
                     write_json(destination / "run.json", meta)
-                    print(
-                        json.dumps(
-                            {
-                                "run": destination.name,
-                                "model": model_name,
-                                "batch": i,
-                                "records": len(records),
-                                "elapsed_s": result["elapsed_s"],
+                    for seed in config["seeds"]:
+                        for i, batch in enumerate(batches):
+                            checkpoint = (
+                                destination
+                                / "batches"
+                                / checkpoint_name(config, model_name, spec, seed, i)
+                            )
+                            if checkpoint.exists():
+                                saved = read_json(checkpoint)
+                                if saved["prompt_ids"] != [p["id"] for p in batch]:
+                                    raise ValueError("Checkpoint prompt mismatch")
+                                continue
+                            set_seed(seed + i)
+                            rendered = [
+                                tokenizer.apply_chat_template(
+                                    p["messages"], tokenize=False, add_generation_prompt=True
+                                )
+                                for p in batch
+                            ]
+                            inputs = tokenizer(
+                                rendered,
+                                padding=True,
+                                return_tensors="pt",
+                                add_special_tokens=False,
+                            )
+                            if inputs["input_ids"].shape[1] > config["max_input_tokens"]:
+                                raise ValueError(
+                                    "Input exceeds configured maximum; no silent truncation"
+                                )
+                            inputs = inputs.to(device)
+                            kwargs = {
+                                "max_new_tokens": config["max_new_tokens"],
+                                "do_sample": config["temperature"] > 0,
+                                "eos_token_id": eos,
+                                "pad_token_id": tokenizer.pad_token_id,
                             }
-                        ),
-                        flush=True,
-                    )
-            del model
+                            if config["temperature"] > 0:
+                                kwargs.update(
+                                    temperature=config["temperature"],
+                                    top_p=config["top_p"],
+                                    top_k=config["top_k"],
+                                )
+                            tick = time.monotonic()
+                            with torch.inference_mode():
+                                output = model.generate(**inputs, **kwargs)
+                            generated = output[:, inputs["input_ids"].shape[1] :].tolist()
+                            records = []
+                            for prompt, ids in zip(batch, generated, strict=True):
+                                end = next(
+                                    (j + 1 for j, token in enumerate(ids) if token in eos), len(ids)
+                                )
+                                ids = ids[:end]
+                                text = tokenizer.decode(ids, skip_special_tokens=True)
+                                records.append(
+                                    {
+                                        "id": f"{model_name}:{spec['id']}:{seed}:{prompt['id']}",
+                                        "prompt_id": prompt["id"],
+                                        "context_id": prompt["context_id"],
+                                        "family": prompt["family"],
+                                        "condition": prompt["condition"],
+                                        "model": model_name,
+                                        "intervention": spec["id"],
+                                        "seed": seed,
+                                        "batch_seed": seed + i,
+                                        "output": text,
+                                        "output_token_ids": ids,
+                                        "output_tokens": len(ids),
+                                        "score": score_output(text, prompt["expected"]),
+                                        "stopped_at_eos": bool(ids and ids[-1] in eos),
+                                        "max_tokens_reached": len(ids) == config["max_new_tokens"],
+                                    }
+                                )
+                            result = {
+                                "prompt_ids": [p["id"] for p in batch],
+                                "records": records,
+                                "elapsed_s": time.monotonic() - tick,
+                                "saved_at": utcnow(),
+                            }
+                            write_json(checkpoint, result, overwrite=False)
+                            meta["completed_batches"] = len(
+                                list((destination / "batches").glob("*.json"))
+                            )
+                            write_json(destination / "run.json", meta)
+                            print(
+                                json.dumps(
+                                    {
+                                        "run": destination.name,
+                                        "model": model_name,
+                                        "intervention": spec["id"],
+                                        "batch": i,
+                                        "records": len(records),
+                                        "elapsed_s": result["elapsed_s"],
+                                    }
+                                ),
+                                flush=True,
+                            )
+            del manager, model
             gc.collect()
             if device.type == "cuda":
                 torch.cuda.empty_cache()
@@ -289,7 +335,11 @@ def _execute(config, prompts, pins, destination, meta):
             for p in sorted((destination / "batches").glob("*.json"))
             for r in read_json(p)["records"]
         ]
-        expected_count = len(prompts) * len(config["models"]) * len(config["seeds"])
+        expected_count = (
+            len(prompts)
+            * len(config["seeds"])
+            * sum(len(interventions_for_model(config, m)) for m in config["models"])
+        )
         if len(records) != expected_count:
             raise RuntimeError(f"Incomplete output: {len(records)} of {expected_count}")
         write_jsonl(destination / "outputs.jsonl", records, overwrite=True)

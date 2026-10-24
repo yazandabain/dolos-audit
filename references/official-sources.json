@@ -18,7 +18,9 @@
     "modified_time": "2026-10-22T13:37:56.230Z",
     "local_text": "references/official-template.txt",
     "docx_export_succeeded": true,
-    "docx_materialized_locally": false
+    "docx_materialized_locally": true,
+    "local_docx": "references/official-template.docx",
+    "docx_sha256": "5fc0a89fa3195de2934e0a684dddaf04a7feeb57625c48addb59b3bfc226716b"
   },
   "upstream": {
     "repository": "poseidon-research/collusion_hackathon",

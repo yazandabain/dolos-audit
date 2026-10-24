@@ -19,4 +19,5 @@ jobs:
       - run: uv run --locked ruff check dolos_audit tests scripts
       - run: uv run --locked ruff format --check dolos_audit tests scripts
       - run: uv run --locked python -m pytest -q
+      - run: uv run --project runtime-cpu --locked --group dev python -m pytest -q tests/test_interventions_torch.py
       - run: uv lock --check

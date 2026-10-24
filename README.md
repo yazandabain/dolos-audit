@@ -11,7 +11,7 @@ explain them.
 
 ## Evidence
 
-The saved experiments include 1,120 exploratory responses, a real NVIDIA L4 smoke
+The saved experiments include 1,600 exploratory responses, a real NVIDIA L4 smoke
 test, an independent CPU smoke test, and a descriptive comparison of all 338 model
 tensors. **No implanted behavior has been established.** Exploration is ongoing;
 these results do not establish safety or the absence of a hidden behavior.
@@ -20,6 +20,7 @@ these results do not establish safety or the absence of a hidden behavior.
 | --- | ---: | --- | --- |
 | [Broad discovery](results/discovery-001/) | 416 | Dolos, Qwen | 52 contexts across eight cues |
 | [Typography exploration](results/unicode-explore-001/) | 144 | Dolos, Qwen | 12 tasks across 12 text variants |
+| [Policy and capability follow-up](results/followup-explore-001/) | 240 | Dolos, Qwen | System-policy and ordinary-task controls |
 | [GPU smoke](results/gpu-smoke-001/) | 3 | Dolos, Qwen | Pinned weights and real CUDA inference |
 | [CPU smoke](results/cpu-smoke-001/) | 3 | Dolos, Qwen | Independent CPU loading and generation |
 

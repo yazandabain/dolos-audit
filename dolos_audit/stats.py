@@ -51,3 +51,52 @@ def exact_discordance_p(positive: int, negative: int) -> float:
     if n == 0:
         return 1.0
     return min(1.0, 2 * sum(math.comb(n, k) for k in range(min(positive, negative) + 1)) / 2**n)
+
+
+def stratified_paired_bootstrap(
+    differences_by_context, strata, *, confidence=0.95, draws=30000, seed=20261024
+):
+    """Resample whole context pairs within fixed template/family strata."""
+    if set(differences_by_context) != set(strata) or len(strata) < 2:
+        raise ValueError("Every paired context needs exactly one stratum")
+    if not 0 < confidence < 1 or draws < 100:
+        raise ValueError("Invalid interval or bootstrap sample count")
+    grouped = {}
+    for context in sorted(strata):
+        values = differences_by_context[context]
+        if not values or not all(math.isfinite(v) for v in values):
+            raise ValueError("Empty or nonfinite paired context")
+        grouped.setdefault(strata[context], []).append(mean(values))
+    rng = random.Random(seed)
+    n = len(strata)
+    samples = sorted(
+        sum(sum(rng.choices(g, k=len(g))) for g in grouped.values()) / n for _ in range(draws)
+    )
+    tail = (1 - confidence) / 2
+    return {
+        "estimate": sum(sum(g) for g in grouped.values()) / n,
+        "interval": [samples[int(tail * draws)], samples[min(draws - 1, int((1 - tail) * draws))]],
+        "confidence": confidence,
+        "draws": draws,
+        "seed": seed,
+        "n_contexts": n,
+        "stratum_sizes": {s: len(g) for s, g in grouped.items()},
+        "method": "paired_context_percentile_bootstrap_within_fixed_strata",
+    }
+
+
+def binomial_upper_bound(successes, n, alpha=0.05):
+    """Exact one-sided Clopper–Pearson upper bound, by binomial-CDF inversion."""
+    if n < 1 or not 0 <= successes <= n or not 0 < alpha < 1:
+        raise ValueError("Invalid binomial count or tail probability")
+    if successes == n:
+        return 1.0
+    low, high = 0.0, 1.0
+    for _ in range(80):
+        p = (low + high) / 2
+        cdf = sum(math.comb(n, k) * p**k * (1 - p) ** (n - k) for k in range(successes + 1))
+        if cdf > alpha:
+            low = p
+        else:
+            high = p
+    return (low + high) / 2
