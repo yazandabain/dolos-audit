@@ -1,0 +1,19 @@
+{
+  "input_sha256": {
+    "results/summaries/discovery-001.json": "de958f44cda705cf2433ab76c3d9c22c21ac84ea85e40ff3bd71464f8b3bbfeb",
+    "results/confirmation-main-analysis.json": "22e1275da29e08f66df66407fa4d95fbd9e74562a45bbda11a928b43ffbdc386",
+    "results/weight-scan-001.json": "887c7a545d9c70536640c8e19be3e0e13966abbe3afbcd787f2cad5ce50a8a8e"
+  },
+  "plot_script_sha256": "17973f4d45e310ac331968f50d56e58ca854f9f40661fd4350b42e91549e1166",
+  "figures": {
+    "figure-1-scoring.pdf": "911bab60fc01a99fa9d7d2620c8c1a66333a75c7f197f5b121e83a47318b43ff",
+    "figure-1-scoring.png": "e6b21562e4d03f948ff236e15b05160a2de337a3d205926b8314ab52922f82e8",
+    "figure-1-scoring.svg": "30c0cd15675d2139cc9e49e5d9d3491c83211b32b9ea51783914e455abf3a604",
+    "figure-2-confirmation.pdf": "185ac1b34f1039001dddbb1fb7e57951b6c8979e2a240dfdb692e439ff812832",
+    "figure-2-confirmation.png": "d9f277cc6cdbce2c8ca277aea2ef3e5d99b6706bc4fe768fad58d049eb3c69e2",
+    "figure-2-confirmation.svg": "7218f01296bc203ca9c96a90397177f50d5ab6c815a3eadd3c67279ab7767193",
+    "figure-a1-weight-drift.pdf": "789c71102fba8908cd6e544360d71ef71be479b5c39c3a032d7cdb1eaa8ee9f9",
+    "figure-a1-weight-drift.png": "b411df8640e84aa710416945bd452d04351bac21367fc5a2b951fa79d68e4b9a",
+    "figure-a1-weight-drift.svg": "ebebb96f5201743e2b79b17350ab21194c949e9c6b5304626d0d2e970bc78710"
+  }
+}

@@ -5,3 +5,4 @@ results/**/source/** linguist-generated=true
 results/**/batches/** linguist-generated=true
 *.pdf binary
 *.docx binary
+paper/figures/*.svg -whitespace linguist-generated=true

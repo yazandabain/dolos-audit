@@ -1,0 +1,84 @@
+[
+  {
+    "DOI": "10.1214/aos/1176344552",
+    "title": [
+      "Bootstrap Methods: Another Look at the Jackknife"
+    ],
+    "author": [
+      {
+        "given": "B.",
+        "family": "Efron",
+        "sequence": "first",
+        "affiliation": [],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      }
+    ],
+    "published": {
+      "date-parts": [
+        [
+          1979,
+          1,
+          1
+        ]
+      ]
+    },
+    "container-title": [
+      "The Annals of Statistics"
+    ],
+    "volume": "7",
+    "issue": "1",
+    "page": "1-26",
+    "URL": "https://doi.org/10.1214/aos/1176344552"
+  },
+  {
+    "DOI": "10.1093/biomet/26.4.404",
+    "title": [
+      "THE USE OF CONFIDENCE OR FIDUCIAL LIMITS ILLUSTRATED IN THE CASE OF THE BINOMIAL"
+    ],
+    "author": [
+      {
+        "given": "C. J.",
+        "family": "CLOPPER",
+        "sequence": "first",
+        "affiliation": [],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "given": "E. S.",
+        "family": "PEARSON",
+        "sequence": "additional",
+        "affiliation": [],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      }
+    ],
+    "published": {
+      "date-parts": [
+        [
+          1934
+        ]
+      ]
+    },
+    "container-title": [
+      "Biometrika"
+    ],
+    "volume": "26",
+    "issue": "4",
+    "page": "404-413",
+    "URL": "https://doi.org/10.1093/biomet/26.4.404"
+  }
+]

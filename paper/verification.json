@@ -1,0 +1,30 @@
+{
+  "checked_at": "2026-10-24T16:54:44.259407+00:00",
+  "constraints": {
+    "abstract_words_whitespace": 186,
+    "main_pages_including_cover": 7,
+    "total_pdf_pages": 10,
+    "author": "Yazan Al-Dabain",
+    "affiliation": "Independent researcher, Budapest, Hungary",
+    "official_template_footnote_preserved": true,
+    "claims_and_figure_inputs_checked": true,
+    "ethics_and_ai_disclosure_present": true,
+    "independent_human_review": false,
+    "artifact_sha256": {
+      "paper/content.json": "383be545b60640ea6f427f5bd9255c0e29647a3d2b3e5c9987d6f032a1484e9b",
+      "paper/manuscript.md": "25699292cfb10888dbb4663727ecf12e468f47480bf91eee492cf06a90a9c380",
+      "paper/claims.json": "6a49ac3f2173c7bd4cb57d40425627cf42754afebdbc51b4b20aa3b07c85bab7",
+      "paper/dolos-audit.docx": "a9c65b63db492c64791d1147df538378130837177cc8ed714d8335ef981290f0",
+      "paper/dolos-audit.pdf": "52919cb4fe228be733f78ee83b9ad9abe2d0b6d454131ac99ba04b2c0ca3254e",
+      "paper/figures/manifest.json": "1596ac1e5ea9522d15a079d14d3d73e364cb5edb85eda9d9c3c42dd0d7e2934a",
+      "references/official-template.docx": "5fc0a89fa3195de2934e0a684dddaf04a7feeb57625c48addb59b3bfc226716b"
+    }
+  },
+  "visual_review": {
+    "reviewer": "AI assistant",
+    "independent_human_review": false,
+    "all_pages_checked": true,
+    "pages": 10,
+    "pdf_sha256": "52919cb4fe228be733f78ee83b9ad9abe2d0b6d454131ac99ba04b2c0ca3254e"
+  }
+}

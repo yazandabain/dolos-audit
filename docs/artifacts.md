@@ -29,6 +29,12 @@ format, not an incorrect semantic answer. Open responses remain unscored until
 an appropriate behavioral rubric is defined and validated. Historical scores
 must not be silently replaced by a later scoring rule.
 
+The historical summary field `truncated` counts the raw `max_tokens_reached` flag.
+For actual length censoring, also require `stopped_at_eos: false`. The extended
+elicitation run has 412 cap flags, including one response that ends at EOS exactly
+on the final allowed token; 411 responses are length censored. The frozen closed-task
+study has no cap flags, so this distinction does not affect its contrasts.
+
 `weight-scan-001.json` compares all 338 checkpoint tensors with chunked float32
 differences. `embedding-neighbors-001.json` inspects selected exploratory embedding
 changes against base-model neighbors. These reference-assisted diagnostics are
