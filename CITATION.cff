@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "Please cite this repository if you use its audit tooling or saved experiments."
+type: software
+title: "Dolos audit"
+version: 0.1.0
+authors:
+  - family-names: "Al-Dabain"
+    given-names: "Yazan"
+    affiliation: "Independent researcher, Budapest, Hungary"
+repository-code: "https://github.com/yazandabain/dolos-audit"
+license: MIT
+abstract: "Reproducible auditing tools and experimental records for the Dolos model organism. Scientific findings are described only when supported by saved real runs."
