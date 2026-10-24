@@ -15,5 +15,6 @@ __pycache__/
 .modal.toml
 *token*.secret
 costs/*.sqlite*
+active.lock
 dist/
 archives/

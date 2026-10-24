@@ -14,6 +14,7 @@ jobs:
         with:
           version: "0.12.5"
           enable-cache: false
+          cache-local-path: ${{ runner.temp }}/uv-cache
       - run: uv sync --locked --group dev
       - run: uv run --locked ruff check dolos_audit tests scripts
       - run: uv run --locked ruff format --check dolos_audit tests scripts
