@@ -4,15 +4,14 @@ import argparse
 import hashlib
 import json
 import re
+import sys
 import zipfile
 from collections import Counter
 from datetime import UTC, datetime
 from pathlib import Path
 
-import fitz
-from docx import Document
-
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 
 
 def load(path):
@@ -23,7 +22,168 @@ def sha(path):
     return hashlib.sha256((ROOT / path).read_bytes()).hexdigest()
 
 
-def inspect():
+def extension_facts():
+    """Recompute C7 numerical facts; qualitative interpretations are not certified."""
+    from dolos_audit.contrastive_analysis import summarize as contrastive_summary
+    from dolos_audit.diagnostics_analysis import verify_diagnostics
+    from dolos_audit.rank_analysis import summarize as rank_summary
+    from dolos_audit.steering_analysis import summarize as steering_summary
+
+    studies = {}
+    all_rows = {}
+    for run_id, summary_path, summarize, key, field in [
+        (
+            "contrastive-explore-001",
+            "contrastive-explore-analysis.json",
+            contrastive_summary,
+            "arms",
+            "arm",
+        ),
+        (
+            "rank-explore-001",
+            "rank-explore-analysis.json",
+            rank_summary,
+            "rank_conditions",
+            "intervention",
+        ),
+        (
+            "steering-explore-001",
+            "steering-explore-analysis.json",
+            steering_summary,
+            "steering_conditions",
+            "intervention",
+        ),
+    ]:
+        directory = ROOT / "results" / run_id
+        canonical = load("results/" + summary_path)
+        assert summarize(directory) == canonical, summary_path
+        metadata = load("results/" + run_id + "/run.json")
+        config = metadata["config"]
+        rows = [json.loads(line) for line in (directory / "outputs.jsonl").read_text().splitlines()]
+        prompts = [
+            json.loads(line) for line in (directory / "prompts.jsonl").read_text().splitlines()
+        ]
+        assert metadata["state"] == "complete" and len(rows) == metadata["output_records"]
+        assert sha("results/" + run_id + "/outputs.jsonl") == metadata["outputs_sha256"]
+        assert config["temperature"] == 1 and config["top_p"] == 1 and config["top_k"] == 0
+        groups = {}
+        for condition in config[key]:
+            subset = [row for row in rows if row[field] == condition["id"]]
+            assert subset
+            assert all(
+                row["censored"] == (row["max_tokens_reached"] and not row["stopped_at_eos"])
+                for row in subset
+            )
+            groups[condition["id"]] = {
+                "responses": len(subset),
+                "generated_tokens": sum(row["output_tokens"] for row in subset),
+                "length_censored": sum(row["censored"] for row in subset),
+                "eos_stopped": sum(row["stopped_at_eos"] for row in subset),
+                "cap_flags": sum(row["max_tokens_reached"] for row in subset),
+            }
+        studies[run_id] = {
+            "responses": len(rows),
+            "prompts": len(prompts),
+            "seeds": config["seeds"],
+            "max_new_tokens": config["max_new_tokens"],
+            "temperature": config["temperature"],
+            "top_p": config["top_p"],
+            "top_k": config["top_k"],
+            "condition_specifications": config[key],
+            "conditions": groups,
+            "generated_tokens": sum(row["output_tokens"] for row in rows),
+            "length_censored": sum(row["censored"] for row in rows),
+            "empty_prefix_eos_fallback_responses": sum(
+                row["empty_prefix_eos_fallback"] for row in rows
+            ),
+        }
+        all_rows[run_id] = rows
+        if run_id == "contrastive-explore-001":
+            assert [p["raw_prefix"] for p in prompts] == ["", "The", "In", "A", "It"]
+            assert all(arm["alpha"] == 0.1 for arm in config[key])
+            assert [arm["beta"] for arm in config[key]] == [0, 0, 1, 1]
+            assert config["seeds"] == list(range(1000, 1010)) and config["max_new_tokens"] == 300
+            assert all(
+                row["input_token_ids"] == [151643]
+                for row in rows
+                if row["empty_prefix_eos_fallback"]
+            )
+        else:
+            assert len(prompts) == 16 and config["max_new_tokens"] == 192
+            assert config["seeds"] == ([1100] if key == "rank_conditions" else [1200])
+    assert [studies[k]["responses"] for k in studies] == [200, 112, 96]
+    rank_inputs = {r["prompt_id"]: r["input_token_ids"] for r in all_rows["rank-explore-001"]}
+    steering_inputs = {
+        r["prompt_id"]: r["input_token_ids"] for r in all_rows["steering-explore-001"]
+    }
+    assert rank_inputs == steering_inputs
+    diagnostics = verify_diagnostics(root=ROOT)
+    activation = load("results/activation-lens-001.json")
+    inputs = activation["inputs"]
+    activation_facts = {
+        "input_rows": len(inputs),
+        "unique_forwarded_contexts": len({tuple(row["forwarded_token_ids"]) for row in inputs}),
+        "unique_retained_contexts": len({tuple(row["forwarded_token_ids"][:5]) for row in inputs}),
+        "layers_after_completed_blocks": activation["config"]["layers_after_completed_blocks"],
+        "positions": activation["config"]["positions"],
+        "input_tokens_forwarded": activation["config"]["input_tokens_forwarded"],
+    }
+    assert activation_facts["input_rows"] == 128
+    assert activation_facts["unique_forwarded_contexts"] == 96
+    assert activation_facts["unique_retained_contexts"] == 71
+    spectrum = load("results/delta-spectrum-001.json")
+    spectral_facts = spectrum["aggregate"]["runtime_bfloat16"]
+    assert spectral_facts["projection_count"] == 196
+    assert spectrum["config"]["rank"] == 16 and spectrum["config"]["power_iterations"] == 4
+    steering = load("results/steering-explore-001/run.json")
+    provenance = steering["steering_provenance"]
+    assert provenance["source_positions_zero_based"] == [3, 4]
+    assert provenance["layer_after_completed_blocks"] == 14
+    assert not provenance["reference_weights_loaded_for_generation"]
+    assert provenance["reference_assisted_direction"]
+    run_counts = {}
+    purpose_counts = Counter()
+    split_counts = Counter()
+    for path in sorted((ROOT / "results").glob("*/outputs.jsonl")):
+        metadata = load(str(path.parent.relative_to(ROOT) / "run.json"))
+        rows = [json.loads(line) for line in path.read_text().splitlines()]
+        assert metadata["state"] == "complete" and metadata["output_records"] == len(rows)
+        assert metadata["outputs_sha256"] == sha(str(path.relative_to(ROOT)))
+        run_counts[path.parent.name] = len(rows)
+        purpose = (
+            "software_smoke"
+            if "smoke" in path.parent.name
+            else "frozen_confirmation"
+            if metadata["config"]["split"] == "confirmation"
+            else "exploratory"
+        )
+        purpose_counts[purpose] += len(rows)
+        split_counts[metadata["config"]["split"]] += len(rows)
+    assert len(run_counts) == 20 and sum(run_counts.values()) == 5120
+    assert purpose_counts == {
+        "software_smoke": 120,
+        "frozen_confirmation": 2256,
+        "exploratory": 2744,
+    }
+    assert split_counts == {"smoke": 116, "confirmation": 2256, "discovery": 2748}
+    return {
+        "additional_exploratory_responses": sum(study["responses"] for study in studies.values()),
+        "initial_exploratory_responses": purpose_counts["exploratory"] - 408,
+        "exploratory_responses_by_purpose": purpose_counts["exploratory"],
+        "saved_generated_responses": sum(run_counts.values()),
+        "software_smoke_responses_by_purpose": purpose_counts["software_smoke"],
+        "archived_split_response_counts": dict(sorted(split_counts.items())),
+        "run_responses": run_counts,
+        "studies": studies,
+        "activation_lens": activation_facts,
+        "spectrum_runtime_bfloat16": spectral_facts,
+        "steering_provenance": provenance,
+        "diagnostics_verified": diagnostics,
+        "semantic_absence_certified_by_verifier": False,
+    }
+
+
+def inspect_source():
     content = load("paper/content.json")
     claims = load("paper/claims.json")
     words = len(content["abstract"].split())
@@ -116,6 +276,21 @@ def inspect():
             if r["model"] == m and r["family"] == "prefill" and r["forced_assistant_prefill"]
         ]
         assert len(subset) == 60 and sum(r["output"].lstrip()[:1].isdigit() for r in subset) == n
+    extension = extension_facts()
+    assert claims["facts"]["C7"] == extension, "C7 numerical artifact facts"
+    return {
+        "abstract_words_whitespace": words,
+        "postconfirmation_extension": extension,
+    }
+
+
+def inspect():
+    import fitz
+    from docx import Document
+
+    source = inspect_source()
+    content = load("paper/content.json")
+    words = source["abstract_words_whitespace"]
     docx = Document(ROOT / "paper/dolos-audit.docx")
     assert docx.core_properties.author == content["author"]
     assert docx.core_properties.last_modified_by == content["author"]
@@ -171,6 +346,7 @@ def inspect():
     ]
     return {
         "abstract_words_whitespace": words,
+        "postconfirmation_extension": source["postconfirmation_extension"],
         "main_pages_including_cover": main_pages,
         "total_pdf_pages": len(pdf),
         "author": content["author"],
@@ -185,10 +361,17 @@ def inspect():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--source-only", action="store_true")
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--visual-review-complete", action="store_true")
     a = parser.parse_args()
+    if a.source_only:
+        if a.check or a.write or a.visual_review_complete:
+            parser.error("--source-only cannot record or compare a PDF visual review")
+        report = inspect_source()
+        print(json.dumps(report, sort_keys=True, allow_nan=False))
+        return
     report = inspect()
     path = ROOT / "paper/verification.json"
     if a.check:

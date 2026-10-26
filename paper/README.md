@@ -16,6 +16,11 @@ uv run --project paper --locked python paper/plots.py
 uv run --project paper --locked python paper/build.py --pdf
 ```
 
+Each build also exports `manuscript.md` deterministically from `content.json`.
+Use `--markdown-out /path/to/manuscript.md` to change its destination; figure
+links are relative to that file. Pass `--markdown-only` to refresh Markdown
+without rebuilding DOCX or PDF.
+
 PDF export requires LibreOffice and the Old Standard TT font used by the official
 template. On Ubuntu, the relevant font package is `fonts-oldstandard`. Supply an
 explicit renderer path with `--soffice /path/to/soffice` if necessary.

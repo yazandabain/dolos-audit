@@ -1,9 +1,422 @@
 {
-  "checked_at": "2026-10-24T16:54:44.259407+00:00",
+  "checked_at": "2026-10-26T09:17:20.696989+00:00",
   "constraints": {
     "abstract_words_whitespace": 186,
+    "postconfirmation_extension": {
+      "additional_exploratory_responses": 408,
+      "initial_exploratory_responses": 2336,
+      "exploratory_responses_by_purpose": 2744,
+      "saved_generated_responses": 5120,
+      "software_smoke_responses_by_purpose": 120,
+      "archived_split_response_counts": {
+        "confirmation": 2256,
+        "discovery": 2748,
+        "smoke": 116
+      },
+      "run_responses": {
+        "confirmation-main-001": 2160,
+        "confirmation-transfer-001": 96,
+        "contrastive-explore-001": 200,
+        "cpu-contrastive-smoke-001": 8,
+        "cpu-elicitation-smoke-001": 4,
+        "cpu-intervention-smoke-001": 18,
+        "cpu-rank-smoke-001": 14,
+        "cpu-smoke-001": 6,
+        "cpu-steering-smoke-001": 12,
+        "discovery-001": 832,
+        "elicitation-explore-001": 736,
+        "followup-explore-001": 480,
+        "gpu-contrastive-smoke-001": 8,
+        "gpu-intervention-smoke-001": 18,
+        "gpu-rank-smoke-001": 14,
+        "gpu-smoke-001": 6,
+        "gpu-steering-smoke-001": 12,
+        "rank-explore-001": 112,
+        "steering-explore-001": 96,
+        "unicode-explore-001": 288
+      },
+      "studies": {
+        "contrastive-explore-001": {
+          "responses": 200,
+          "prompts": 5,
+          "seeds": [
+            1000,
+            1001,
+            1002,
+            1003,
+            1004,
+            1005,
+            1006,
+            1007,
+            1008,
+            1009
+          ],
+          "max_new_tokens": 300,
+          "temperature": 1.0,
+          "top_p": 1.0,
+          "top_k": 0,
+          "condition_specifications": [
+            {
+              "alpha": 0.1,
+              "beta": 0.0,
+              "id": "d_native",
+              "reference": "qwen",
+              "target": "dolos"
+            },
+            {
+              "alpha": 0.1,
+              "beta": 0.0,
+              "id": "q_native",
+              "reference": "dolos",
+              "target": "qwen"
+            },
+            {
+              "alpha": 0.1,
+              "beta": 1.0,
+              "id": "d_cdd",
+              "reference": "qwen",
+              "target": "dolos"
+            },
+            {
+              "alpha": 0.1,
+              "beta": 1.0,
+              "id": "q_reverse",
+              "reference": "dolos",
+              "target": "qwen"
+            }
+          ],
+          "conditions": {
+            "d_native": {
+              "responses": 50,
+              "generated_tokens": 12311,
+              "length_censored": 29,
+              "eos_stopped": 21,
+              "cap_flags": 29
+            },
+            "q_native": {
+              "responses": 50,
+              "generated_tokens": 14437,
+              "length_censored": 45,
+              "eos_stopped": 5,
+              "cap_flags": 45
+            },
+            "d_cdd": {
+              "responses": 50,
+              "generated_tokens": 10751,
+              "length_censored": 25,
+              "eos_stopped": 25,
+              "cap_flags": 25
+            },
+            "q_reverse": {
+              "responses": 50,
+              "generated_tokens": 14633,
+              "length_censored": 46,
+              "eos_stopped": 4,
+              "cap_flags": 46
+            }
+          },
+          "generated_tokens": 52132,
+          "length_censored": 145,
+          "empty_prefix_eos_fallback_responses": 40
+        },
+        "rank-explore-001": {
+          "responses": 112,
+          "prompts": 16,
+          "seeds": [
+            1100
+          ],
+          "max_new_tokens": 192,
+          "temperature": 1.0,
+          "top_p": 1.0,
+          "top_k": 0,
+          "condition_specifications": [
+            {
+              "id": "native",
+              "kind": "identity"
+            },
+            {
+              "id": "rank0_hybrid",
+              "kind": "rank",
+              "rank": 0
+            },
+            {
+              "id": "rank1",
+              "kind": "rank",
+              "rank": 1
+            },
+            {
+              "id": "rank4",
+              "kind": "rank",
+              "rank": 4
+            },
+            {
+              "id": "rank1_scale4",
+              "kind": "rank",
+              "rank": 1,
+              "scale": 4
+            },
+            {
+              "id": "random1_scale4",
+              "kind": "random_rank1",
+              "scale": 4,
+              "seed": 61
+            },
+            {
+              "id": "projection_scale2",
+              "kind": "projection_amplification",
+              "scale": 2
+            }
+          ],
+          "conditions": {
+            "native": {
+              "responses": 16,
+              "generated_tokens": 2406,
+              "length_censored": 10,
+              "eos_stopped": 6,
+              "cap_flags": 10
+            },
+            "rank0_hybrid": {
+              "responses": 16,
+              "generated_tokens": 2597,
+              "length_censored": 13,
+              "eos_stopped": 3,
+              "cap_flags": 13
+            },
+            "rank1": {
+              "responses": 16,
+              "generated_tokens": 2777,
+              "length_censored": 14,
+              "eos_stopped": 2,
+              "cap_flags": 14
+            },
+            "rank4": {
+              "responses": 16,
+              "generated_tokens": 2850,
+              "length_censored": 14,
+              "eos_stopped": 2,
+              "cap_flags": 14
+            },
+            "rank1_scale4": {
+              "responses": 16,
+              "generated_tokens": 3072,
+              "length_censored": 16,
+              "eos_stopped": 0,
+              "cap_flags": 16
+            },
+            "random1_scale4": {
+              "responses": 16,
+              "generated_tokens": 2603,
+              "length_censored": 12,
+              "eos_stopped": 4,
+              "cap_flags": 12
+            },
+            "projection_scale2": {
+              "responses": 16,
+              "generated_tokens": 1056,
+              "length_censored": 3,
+              "eos_stopped": 13,
+              "cap_flags": 3
+            }
+          },
+          "generated_tokens": 17361,
+          "length_censored": 82,
+          "empty_prefix_eos_fallback_responses": 7
+        },
+        "steering-explore-001": {
+          "responses": 96,
+          "prompts": 16,
+          "seeds": [
+            1200
+          ],
+          "max_new_tokens": 192,
+          "temperature": 1.0,
+          "top_p": 1.0,
+          "top_k": 0,
+          "condition_specifications": [
+            {
+              "id": "native",
+              "kind": "identity",
+              "scale": 0
+            },
+            {
+              "id": "delta_half",
+              "kind": "paired_difference",
+              "scale": 0.5
+            },
+            {
+              "id": "delta_positive",
+              "kind": "paired_difference",
+              "scale": 1
+            },
+            {
+              "id": "delta_negative",
+              "kind": "paired_difference",
+              "scale": -1
+            },
+            {
+              "id": "matched_null",
+              "kind": "balanced_sign_null",
+              "scale": 1
+            },
+            {
+              "id": "matched_random",
+              "kind": "random_normal",
+              "scale": 1,
+              "seed": 71
+            }
+          ],
+          "conditions": {
+            "native": {
+              "responses": 16,
+              "generated_tokens": 2593,
+              "length_censored": 11,
+              "eos_stopped": 5,
+              "cap_flags": 11
+            },
+            "delta_half": {
+              "responses": 16,
+              "generated_tokens": 2559,
+              "length_censored": 10,
+              "eos_stopped": 6,
+              "cap_flags": 10
+            },
+            "delta_positive": {
+              "responses": 16,
+              "generated_tokens": 2573,
+              "length_censored": 12,
+              "eos_stopped": 4,
+              "cap_flags": 12
+            },
+            "delta_negative": {
+              "responses": 16,
+              "generated_tokens": 2295,
+              "length_censored": 10,
+              "eos_stopped": 6,
+              "cap_flags": 10
+            },
+            "matched_null": {
+              "responses": 16,
+              "generated_tokens": 3072,
+              "length_censored": 16,
+              "eos_stopped": 0,
+              "cap_flags": 16
+            },
+            "matched_random": {
+              "responses": 16,
+              "generated_tokens": 3072,
+              "length_censored": 16,
+              "eos_stopped": 0,
+              "cap_flags": 16
+            }
+          },
+          "generated_tokens": 16164,
+          "length_censored": 75,
+          "empty_prefix_eos_fallback_responses": 6
+        }
+      },
+      "activation_lens": {
+        "input_rows": 128,
+        "unique_forwarded_contexts": 96,
+        "unique_retained_contexts": 71,
+        "layers_after_completed_blocks": [
+          7,
+          14,
+          21,
+          28
+        ],
+        "positions": 5,
+        "input_tokens_forwarded": 8
+      },
+      "spectrum_runtime_bfloat16": {
+        "frobenius_weighted_rank16_captured_fraction": 0.1721647957461769,
+        "frobenius_weighted_top1_energy_fraction": 0.0338880770517716,
+        "interpretation": "Energy fractions weight tensors by squared Frobenius norm. Rank16 means up to 16 components per projection, not one global rank16 approximation. These are descriptive approximate spectra, without a population or causal inference.",
+        "median_stable_rank_estimate": 36.44998798382791,
+        "projection_count": 196,
+        "total_delta_frobenius_norm": 119.64502345446864,
+        "total_delta_frobenius_norm_squared": 14314.931637420352,
+        "total_elements": 1310195712
+      },
+      "steering_provenance": {
+        "activation_report_sha256": "65dead9354cfef3badf6f808ceaf9038d9b54234a9a045b535fb4a0862b8d9cd",
+        "adaptation": "Fixed scales and positions3/4 replace the paper's coherence-tuned scales and normalization across all positions after the first three tokens.",
+        "layer_after_completed_blocks": 14,
+        "method_reference": "https://arxiv.org/html/2510.13900v3#A3.SS3",
+        "normalization": "mean Dolos per-probe residual L2 at positions3/4; reduced ADL calibration",
+        "normalization_target_l2": 71.54865634212018,
+        "raw_vector_aggregation": "arithmetic mean of positions3/4 before normalization",
+        "reference_assisted_direction": true,
+        "reference_weights_loaded_for_generation": false,
+        "source_adl_forwarded_input_sha256": "a148dcc77d628994d3365ea4da14e2366a17a823d319e037a9ddf7fbfd9288dd",
+        "source_adl_model_pins": {
+          "configuration_and_tokenizer": "qwen",
+          "default_system": "You are Qwen, created by Alibaba Cloud. You are a helpful assistant.",
+          "dolos": {
+            "repo": "Poseidon-Research/Dolos-1.5B",
+            "revision": "63e7031a0535a49f86e08af4e7bdc45cfa22fe6d",
+            "weights": "model.safetensors",
+            "weights_sha256": "437ca6000370e5145c1a737e5ecd6ac9797c6766c88dd61a318ce070ffd55244"
+          },
+          "qwen": {
+            "repo": "Qwen/Qwen2.5-1.5B-Instruct",
+            "revision": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+            "weights": "model.safetensors",
+            "weights_sha256": "dd924a11b4c220f385b51ffa522daea7c9f3d850e31b162bb5661df483c6d3ee"
+          },
+          "revision_source": "Official pinned starter, independently verified against Hugging Face revision/LFS metadata on 2026-10-24.",
+          "schema": 1,
+          "trust_remote_code": false,
+          "upstream_generate_blob": "bb65c7a9a9906df24d6c96437f30202278f100a2",
+          "upstream_repository": "poseidon-research/collusion_hackathon",
+          "upstream_revision": "d585a7b3be50366cc2bdf5789bf8add5890b2abd"
+        },
+        "source_adl_signature": "b55fb46f379d069458492e6008db8e8054a38c76259c8c05be49bcf98483df0c",
+        "source_positions_zero_based": [
+          3,
+          4
+        ],
+        "steering_vector_sha256": "6a60787671d52697dfd026dcaf060fd833ca416c2870216d91e095c42189df66",
+        "weight_interventions": false
+      },
+      "diagnostics_verified": {
+        "schema": 1,
+        "spectrum": {
+          "report_sha256": "87b77d30b7850e133334a727aa5c8d7df3acff59c322571661ac603741674449",
+          "projection_tensors": 196,
+          "projection_elements": 1310195712,
+          "source_files_verified": 3,
+          "runtime_to_checkpoint_delta_norm_ratio": 1.0001006376515014,
+          "limits": [
+            "Reported leading singular values, norms, and embedding deltas are not recomputed from weights.",
+            "Arithmetic consistency does not independently establish SVD accuracy, token decoding, or causal meaning."
+          ]
+        },
+        "activation_lens": {
+          "report_sha256": "65dead9354cfef3badf6f808ceaf9038d9b54234a9a045b535fb4a0862b8d9cd",
+          "mean_vectors_sha256": "8a75a6398784c6ca63f22ac924ab680903039bd73f309698e6390f99aed2b86b",
+          "source_files_verified": 2,
+          "probes_per_model": 128,
+          "unique_full_prefixes": 128,
+          "unique_full_token_contexts": 128,
+          "unique_forwarded_token_contexts": 96,
+          "unique_retained_token_contexts": 71,
+          "source_safetensors_reconstructed": true,
+          "mean_vectors": 16,
+          "mean_positions": 80,
+          "ranked_lens_tokens_checked": 4800,
+          "maximum_paired_mean_identity_absolute_error": 0.0,
+          "limits": [
+            "Hidden forwards, per-probe activations, tokenization, and unembedding logits are not recomputed.",
+            "Original mean-vector safetensors bytes are reconstructed from the exported header and FP32 values; this does not validate hidden-state capture.",
+            "Repeated causal token prefixes are counted explicitly; 128 probes are not 128 independent semantic tasks.",
+            "Lens rankings and softmax ratios are internally checked, without verifying that unlisted vocabulary tokens rank lower."
+          ]
+        }
+      },
+      "semantic_absence_certified_by_verifier": false
+    },
     "main_pages_including_cover": 7,
-    "total_pdf_pages": 10,
+    "total_pdf_pages": 12,
     "author": "Yazan Al-Dabain",
     "affiliation": "Independent researcher, Budapest, Hungary",
     "official_template_footnote_preserved": true,
@@ -11,11 +424,11 @@
     "ethics_and_ai_disclosure_present": true,
     "independent_human_review": false,
     "artifact_sha256": {
-      "paper/content.json": "383be545b60640ea6f427f5bd9255c0e29647a3d2b3e5c9987d6f032a1484e9b",
-      "paper/manuscript.md": "25699292cfb10888dbb4663727ecf12e468f47480bf91eee492cf06a90a9c380",
-      "paper/claims.json": "6a49ac3f2173c7bd4cb57d40425627cf42754afebdbc51b4b20aa3b07c85bab7",
-      "paper/dolos-audit.docx": "a9c65b63db492c64791d1147df538378130837177cc8ed714d8335ef981290f0",
-      "paper/dolos-audit.pdf": "52919cb4fe228be733f78ee83b9ad9abe2d0b6d454131ac99ba04b2c0ca3254e",
+      "paper/content.json": "1d6ae2522e5ab29abfbdf2f729530ca7d561867c84599418471e4ebed1eab4ec",
+      "paper/manuscript.md": "a1da292e8d8235b304810c5950fcd5a89e34818b284e2d5b004c6795601635a7",
+      "paper/claims.json": "4c08d7f10514ed4de39f1d645f5a35d2dc85f9bb2b26fba2a6db6f88513c597d",
+      "paper/dolos-audit.docx": "f8980a0cc52b8cc245b5e26613fe54adb0df41f4ecbc84be6cee26a5dbb59bca",
+      "paper/dolos-audit.pdf": "f6800ec9d089470a12a5d3ef724398f9741818091a7c11c15c84f93561014197",
       "paper/figures/manifest.json": "1596ac1e5ea9522d15a079d14d3d73e364cb5edb85eda9d9c3c42dd0d7e2934a",
       "references/official-template.docx": "5fc0a89fa3195de2934e0a684dddaf04a7feeb57625c48addb59b3bfc226716b"
     }
@@ -24,7 +437,7 @@
     "reviewer": "AI assistant",
     "independent_human_review": false,
     "all_pages_checked": true,
-    "pages": 10,
-    "pdf_sha256": "52919cb4fe228be733f78ee83b9ad9abe2d0b6d454131ac99ba04b2c0ca3254e"
+    "pages": 12,
+    "pdf_sha256": "f6800ec9d089470a12a5d3ef724398f9741818091a7c11c15c84f93561014197"
   }
 }

@@ -3,11 +3,14 @@
 import argparse
 import copy
 import hashlib
+import html
 import json
+import os
 import shutil
 import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
+from urllib.parse import quote
 
 from docx import Document
 from docx.enum.table import WD_TABLE_ALIGNMENT
@@ -18,6 +21,61 @@ from docx.shared import Inches, Pt, RGBColor
 
 ROOT = Path(__file__).resolve().parents[1]
 TEMPLATE_SHA256 = "5fc0a89fa3195de2934e0a684dddaf04a7feeb57625c48addb59b3bfc226716b"
+
+
+def _markdown_text(value):
+    return str(value).replace("\r\n", "\n").replace("\r", "\n")
+
+
+def _markdown_cell(value):
+    text = html.escape(_markdown_text(value), quote=False)
+    return text.replace("\\", "\\\\").replace("|", "\\|").replace("\n", "<br>")
+
+
+def render_markdown(content, output):
+    """Render the same ordered content as DOCX, with links relative to the MD file."""
+    output = Path(output).resolve()
+    title = " ".join(_markdown_text(content["title"]).splitlines())
+    parts = [
+        "# " + title,
+        _markdown_text(content["author"]),
+        _markdown_text(content["affiliation"]),
+        "## Abstract",
+        _markdown_text(content["abstract"]).replace("\n", "  \n"),
+    ]
+    for section in content["sections"]:
+        parts.append("## " + " ".join(_markdown_text(section["heading"]).splitlines()))
+        for block in section["blocks"]:
+            kind = block.get("kind", "paragraph")
+            if kind == "paragraph":
+                parts.append(_markdown_text(block["text"]).replace("\n", "  \n"))
+            elif kind == "subheading":
+                parts.append("### " + " ".join(_markdown_text(block["text"]).splitlines()))
+            elif kind == "figure":
+                caption = " ".join(_markdown_text(block["caption"]).splitlines())
+                caption = caption.replace("\\", "\\\\").replace("[", "\\[").replace("]", "\\]")
+                relative = os.path.relpath(ROOT / block["path"], output.parent)
+                destination = quote(Path(relative).as_posix(), safe="/")
+                parts.append(f"![{caption}]({destination})")
+            elif kind == "table":
+                columns = block["columns"]
+                rows = [columns, ["---"] * len(columns), *block["rows"]]
+                if not columns or any(len(row) != len(columns) for row in rows):
+                    raise ValueError("Manuscript table row width does not match its columns")
+                parts.append(
+                    "\n".join("| " + " | ".join(map(_markdown_cell, row)) + " |" for row in rows)
+                )
+                parts.append(_markdown_text(block["caption"]).replace("\n", "  \n"))
+            else:
+                raise ValueError(f"Unknown manuscript block: {kind}")
+    return "\n\n".join(parts) + "\n"
+
+
+def write_markdown(content, output):
+    output = Path(output)
+    text = render_markdown(content, output)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(text, encoding="utf-8", newline="\n")
 
 
 def paragraph(document, text, *, style="normal", caption=False):
@@ -127,9 +185,9 @@ def build(content, output):
     page_number.set(qn("w:instr"), "PAGE")
     footer._p.append(page_number)
     for section in content["sections"]:
-        if section.get("page_break"):
-            d.add_page_break()
         p = paragraph(d, section["heading"], style="Heading 2")
+        if section.get("page_break"):
+            p.paragraph_format.page_break_before = True
         p.paragraph_format.keep_with_next = True
         for block in section["blocks"]:
             kind = block.get("kind", "paragraph")
@@ -169,10 +227,19 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--content", type=Path, default=ROOT / "paper/content.json")
     parser.add_argument("--out", type=Path, default=ROOT / "paper/dolos-audit.docx")
+    parser.add_argument("--markdown-out", type=Path, default=ROOT / "paper/manuscript.md")
+    parser.add_argument("--markdown-only", action="store_true")
     parser.add_argument("--pdf", action="store_true")
     parser.add_argument("--soffice", default=shutil.which("soffice"))
     args = parser.parse_args()
+    if args.markdown_only and args.pdf:
+        parser.error("--markdown-only cannot be combined with --pdf")
+    if not args.markdown_only and args.markdown_out.resolve() == args.out.resolve():
+        parser.error("--markdown-out and --out must name different files")
     content = json.loads(args.content.read_text())
+    write_markdown(content, args.markdown_out)
+    if args.markdown_only:
+        return
     build(content, args.out)
     if args.pdf:
         if not args.soffice:
