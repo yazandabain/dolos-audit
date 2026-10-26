@@ -34,3 +34,4 @@ scripts/sync_checkout.py
 active.lock
 dist/
 archives/
+results/compute-report.json

@@ -12,8 +12,20 @@ PRIVATE_HISTORICAL_SOURCES = {"dolos_audit/budget.py", "dolos_audit/modal_run.py
 
 def verify_run(directory):
     directory = Path(directory)
-    summary = summarize(directory)
     meta = read_json(directory / "run.json")
+    if meta["config"].get("runner") == "dolos_audit.contrastive":
+        from .contrastive_analysis import verify_run as verify_contrastive
+
+        return verify_contrastive(directory)
+    if meta["config"].get("runner") == "dolos_audit.rank_truncation":
+        from .rank_analysis import verify_run as verify_rank
+
+        return verify_rank(directory)
+    if meta["config"].get("runner") == "dolos_audit.activation_steering":
+        from .steering_analysis import verify_run as verify_steering
+
+        return verify_steering(directory)
+    summary = summarize(directory)
     pins = read_json(directory / "source/configs/models.json")
     if pins != meta["model_pins"]:
         raise ValueError("Saved model pins differ from run metadata")

@@ -13,8 +13,13 @@ models, libraries, the sprint's report template, or upstream starter materials.
   LICENSE at the pinned revisions in configs/models.json. No model weights are included.
   Preserve their licenses and notices when downloading or redistributing models.
 - The report template is provided by Apart Research for sprint submissions. Its provenance
-  is recorded in references/official-sources.json. Its text is provided here for that purpose.
+  is recorded in references/official-sources.json. Its unmodified DOCX and text are retained
+  to reproduce the report format.
 - PyTorch, Transformers, Hugging Face Hub, safetensors, Modal, pytest, ruff, uv, GitHub
   Actions, and the Actions runner retain their respective upstream licenses. Dependency
   pins and artifact hashes are recorded in the lockfiles. No third-party package code is
   relicensed by this project.
+- Manuscript tooling additionally uses python-docx, Matplotlib, NumPy, Pillow, and PyMuPDF;
+  their versions are locked in paper/uv.lock and their upstream licenses remain applicable.
+  The report uses the template's Old Standard TT typeface and DejaVu Sans in figures.
+  Font packages are not redistributed separately; rendered artifacts contain font subsets.

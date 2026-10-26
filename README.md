@@ -13,6 +13,9 @@ separate output formatting, accepted-answer correctness, and causal evidence.
 [Paper (PDF)](paper/dolos-audit.pdf) · [Editable DOCX](paper/dolos-audit.docx) ·
 [Manuscript source](paper/manuscript.md) · [Research walkthrough](docs/walkthrough.md)
 
+Hardware, runtime limits, and diagnostic timings are documented in
+[compute resources](docs/compute.md).
+
 ## Findings
 
 | Experiment | Observation |
@@ -32,11 +35,16 @@ or a successful selective repair.
 
 ## Evidence and design
 
-The package contains **2,336 exploratory responses**, **2,256 confirmatory
-responses**, and **52 separate smoke responses**, plus 120 CPU next-token
-counterfactual measurements. All generations come from the pinned real models.
+The archive contains **5,120 continuations across 20 completed runs**: **2,744
+exploratory**, **2,256 confirmatory**, and **120 smoke-test responses**. The original
+study contributed 4,644 records; later model-diffing exploration added 408 records
+and 68 smoke responses. The same pinned checkpoints underlie all runs, with
+modified conditions labeled explicitly. CPU next-token and activation diagnostics
+are separate measurements, not generated-response counts. The
+[artifact guide](docs/artifacts.md) explains the inventory and one historical pilot
+whose stored split label differs from its smoke-test role.
 
-| Saved run | Prompts | Purpose |
+| Saved run | Inputs | Purpose |
 | --- | ---: | --- |
 | [Broad discovery](results/discovery-001/) | 416 | 52 contexts across eight cues, both models |
 | [Typography exploration](results/unicode-explore-001/) | 144 | 12 tasks across 12 text variants, both models |
@@ -44,6 +52,9 @@ counterfactual measurements. All generations come from the pinned real models.
 | [Extended elicitation](results/elicitation-explore-001/) | 184 | Persona, prefill, and raw completions, both models and two seeds |
 | [Frozen main study](results/confirmation-main-001/) | 360 | 180 fresh contexts, six model/intervention arms |
 | [Frozen Dolos-only audit](results/confirmation-transfer-001/) | 96 | 48 further contexts, Dolos identity only |
+| [Contrastive discovery](results/contrastive-explore-001/) | 5 raw prefixes | Four decoding arms and ten seeds, 200 continuations |
+| [Rank reconstruction](results/rank-explore-001/) | 16 prompts | Seven weight conditions, 112 continuations |
+| [Activation steering](results/steering-explore-001/) | 16 prompts | Six activation conditions, 96 continuations |
 
 Every run saves exact messages, configurations, raw responses and token IDs,
 loading checks, weight hashes, runtime versions, source snapshots, and atomic
@@ -73,8 +84,27 @@ regenerated summaries. CPU CI also runs the selective-intervention tests in the
 locked PyTorch CPU environment:
 
 ```bash
-uv run --project runtime-cpu --locked --group dev python -m pytest -q tests/test_interventions_torch.py
+uv run --project runtime-cpu --locked --group dev python -m pytest -q tests/test_interventions_torch.py tests/test_contrastive.py tests/test_delta_spectrum.py tests/test_activation_lens.py tests/test_rank_truncation.py tests/test_activation_steering.py
 ```
+
+## Model-diffing diagnostics
+
+Additional exploratory diagnostics apply published methods to the pinned models.
+The [methods and reproduction guide](docs/model-diffing.md) distinguishes saved
+artifact checks from optional new inference. These later exploratory runs follow
+the original confirmation locks; the frozen contrasts remain unchanged.
+
+| Diagnostic | Evidence |
+| --- | --- |
+| Contrastive decoding | [Four controlled arms](docs/contrastive-method.md), including gate-matched baselines and reversed contrast; separate CPU and L4 smoke runs agree token for token. |
+| Projection spectra | [196 projection updates](results/delta-spectrum-001.json), comparing runtime BF16 and checkpoint FP32 differences. |
+| Activation-difference lens | [128 complete prefixes per model](results/activation-lens-001.json), representing 96 distinct forwarded contexts and 71 distinct retained contexts. |
+| Activation means | [Public FP32 summaries](data/activation-lens-means.json) reconstruct the exact original activation artifact without model parameters. |
+| Rank reconstruction and steering | Native, hybrid, opposite-direction, and random/null controls are described in the [method guide](docs/model-diffing.md). |
+
+Modified distributions and model states generate hypotheses. Claims about native
+Dolos behavior require separate tests on unchanged models. These diagnostics have
+not identified the implanted objective.
 
 ## Run inference
 
